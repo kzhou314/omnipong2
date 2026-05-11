@@ -23,8 +23,10 @@ export function PlayersPage() {
               Baseline actions (stub)
             </h2>
             <div className="flex flex-wrap gap-3">
-              <Button className="px-5 py-2.5">Sign in to OmniPong</Button>
-              <Button variant="secondary" className="px-5 py-2.5">
+              <Button to="/login" className="px-5 py-2.5">
+                Sign in to OmniPong
+              </Button>
+              <Button to="/register" variant="secondary" className="px-5 py-2.5">
                 Create account
               </Button>
             </div>

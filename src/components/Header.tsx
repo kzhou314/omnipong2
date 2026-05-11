@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-2 text-sm font-medium transition-colors ${
@@ -8,6 +9,8 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
   }`;
 
 export function Header() {
+  const auth = useAuth();
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-space/75 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
@@ -49,19 +52,49 @@ export function Header() {
           </NavLink>
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            type="button"
-            className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 backdrop-blur-sm hover:bg-white/10 sm:inline-flex"
-          >
-            Member sign in
-          </button>
-          <button
-            type="button"
-            className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-space shadow-[0_0_20px_-4px_rgba(45,212,160,0.5)] hover:brightness-110"
-          >
-            Director access
-          </button>
+        <div className="flex max-w-[min(100%,14rem)] shrink-0 items-center gap-2">
+          {auth.status === "loading" ? (
+            <span className="hidden text-xs text-slate-500 sm:inline">
+              …
+            </span>
+          ) : auth.status === "authenticated" ? (
+            <>
+              <span
+                className="hidden truncate text-xs text-slate-400 sm:inline"
+                title={auth.user.email}
+              >
+                {auth.user.email}
+              </span>
+              <button
+                type="button"
+                className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 hover:bg-white/10"
+                onClick={() => void auth.logout()}
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink
+                to="/login"
+                className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 backdrop-blur-sm hover:bg-white/10 sm:inline-flex"
+              >
+                Member sign in
+              </NavLink>
+              <NavLink
+                to="/login?next=/directors"
+                className="hidden rounded-lg border border-accent/40 bg-accent/10 px-3 py-2 text-sm font-semibold text-accent hover:bg-accent/20 sm:inline-flex"
+              >
+                Director access
+              </NavLink>
+              <NavLink
+                to="/register"
+                className="rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-space shadow-[0_0_20px_-4px_rgba(45,212,160,0.5)] hover:brightness-110"
+              >
+                Register
+              </NavLink>
+            </>
+          )}
         </div>
       </div>
 
@@ -81,6 +114,16 @@ export function Header() {
         <NavLink to="/directors" className={linkClass}>
           Directors
         </NavLink>
+        {auth.status === "anonymous" ? (
+          <>
+            <NavLink to="/login" className={linkClass}>
+              Sign in
+            </NavLink>
+            <NavLink to="/register" className={linkClass}>
+              Register
+            </NavLink>
+          </>
+        ) : null}
       </nav>
     </header>
   );

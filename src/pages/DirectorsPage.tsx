@@ -24,7 +24,9 @@ export function DirectorsPage() {
               Director console (stub)
             </h2>
             <div className="flex flex-wrap gap-3">
-              <Button className="px-5 py-2.5">Open director login</Button>
+              <Button to="/login?next=/directors" className="px-5 py-2.5">
+                Open director login
+              </Button>
               <Button variant="secondary" className="px-5 py-2.5">
                 Request director role
               </Button>
