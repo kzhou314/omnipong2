@@ -59,6 +59,12 @@ export function Header() {
             </span>
           ) : auth.status === "authenticated" ? (
             <>
+              <NavLink
+                to="/profile"
+                className="hidden rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-slate-200 backdrop-blur-sm hover:bg-white/10 sm:inline-flex"
+              >
+                My profile
+              </NavLink>
               <span
                 className="hidden truncate text-xs text-slate-400 sm:inline"
                 title={auth.user.email}
@@ -123,6 +129,10 @@ export function Header() {
               Register
             </NavLink>
           </>
+        ) : auth.status === "authenticated" ? (
+          <NavLink to="/profile" className={linkClass}>
+            Profile
+          </NavLink>
         ) : null}
       </nav>
     </header>

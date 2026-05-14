@@ -1,23 +1,36 @@
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import {
-  apiGetJson,
-  apiPostEmpty,
-  apiPostJson,
-  type ApiUser,
-} from "@/api/client";
+import { supabase } from "@/lib/supabase";
+
+type AuthUser = {
+  id: string;
+  email: string;
+  createdAt: string;
+};
+
+type RegisterDetails = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  clubName: string;
+  city: string;
+  state: string;
+  usattId: string;
+  usattRating: number;
+};
 
 type AuthState =
   | { status: "loading" }
   | { status: "anonymous" }
-  | { status: "authenticated"; user: ApiUser };
+  | { status: "authenticated"; user: AuthUser };
 
 type AuthContextValue = AuthState & {
   refresh: () => Promise<void>;
@@ -25,65 +38,132 @@ type AuthContextValue = AuthState & {
     email: string,
     password: string,
   ) => Promise<{ ok: true } | { ok: false; error: string }>;
-  register: (
-    email: string,
-    password: string,
-  ) => Promise<{ ok: true } | { ok: false; error: string }>;
+  register: (details: RegisterDetails) => Promise<
+    | { ok: true; needsEmailConfirmation: boolean }
+    | { ok: false; error: string }
+  >;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function toAuthUser(user: { id: string; email?: string | null; created_at: string }): AuthUser {
+  return {
+    id: user.id,
+    email: user.email ?? "",
+    createdAt: user.created_at,
+  };
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
-  const refresh = useCallback(async () => {
-    const result = await apiGetJson<{ user: ApiUser }>("/api/auth/me");
-    if (result.ok) {
-      setState({ status: "authenticated", user: result.data.user });
+  async function refresh() {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user) {
+      setState({ status: "anonymous" });
       return;
     }
-    setState({ status: "anonymous" });
-  }, []);
+
+    setState({
+      status: "authenticated",
+      user: toAuthUser(session.user),
+    });
+  }
 
   useEffect(() => {
     void refresh();
-  }, [refresh]);
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const result = await apiPostJson<{ user: ApiUser }>("/api/auth/login", {
-        email,
-        password,
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session?.user) {
+        setState({ status: "anonymous" });
+        return;
+      }
+
+      setState({
+        status: "authenticated",
+        user: toAuthUser(session.user),
       });
-      if (!result.ok) {
-        return { ok: false as const, error: result.error };
-      }
-      setState({ status: "authenticated", user: result.data.user });
-      return { ok: true as const };
-    },
-    [],
-  );
+    });
 
-  const register = useCallback(
-    async (email: string, password: string) => {
-      const result = await apiPostJson<{ user: ApiUser }>(
-        "/api/auth/register",
-        { email, password },
-      );
-      if (!result.ok) {
-        return { ok: false as const, error: result.error };
-      }
-      setState({ status: "authenticated", user: result.data.user });
-      return { ok: true as const };
-    },
-    [],
-  );
-
-  const logout = useCallback(async () => {
-    await apiPostEmpty("/api/auth/logout");
-    setState({ status: "anonymous" });
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  async function login(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      return { ok: false as const, error: error.message };
+    }
+
+    if (!data.user) {
+      return { ok: false as const, error: "No user returned from sign-in." };
+    }
+
+    setState({
+      status: "authenticated",
+      user: toAuthUser(data.user),
+    });
+
+    return { ok: true as const };
+  }
+
+  async function register(details: RegisterDetails) {
+    const { data, error } = await supabase.auth.signUp({
+      email: details.email,
+      password: details.password,
+      options: {
+        data: {
+          first_name: details.firstName.trim(),
+          last_name: details.lastName.trim(),
+          phone: details.phone.trim(),
+          club_name: details.clubName.trim(),
+          city: details.city.trim(),
+          state: details.state.trim(),
+          usatt_id: details.usattId.trim().toUpperCase(),
+          usatt_rating: details.usattRating,
+        },
+      },
+    });
+
+    if (error) {
+      return { ok: false as const, error: error.message };
+    }
+
+    if (!data.user) {
+      return {
+        ok: false as const,
+        error: "No user returned from registration.",
+      };
+    }
+
+    if (!data.session?.user) {
+      setState({ status: "anonymous" });
+      return { ok: true as const, needsEmailConfirmation: true };
+    }
+
+    setState({
+      status: "authenticated",
+      user: toAuthUser(data.user),
+    });
+
+    return { ok: true as const, needsEmailConfirmation: false };
+  }
+
+  async function logout() {
+    await supabase.auth.signOut();
+    setState({ status: "anonymous" });
+  }
 
   const value = useMemo<AuthContextValue>(
     () =>
@@ -94,12 +174,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
       }) as AuthContextValue,
-    [state, refresh, login, register, logout],
+    [state],
   );
 
-  return (
-    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth(): AuthContextValue {
