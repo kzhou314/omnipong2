@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 export function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const nextPath = params.get("next") ?? "/players";
+  const nextPath = params.get("next") ?? "/";
   const auth = useAuth();
   const { login, status } = auth;
 
@@ -25,7 +25,7 @@ export function LoginPage() {
       setError(result.error);
       return;
     }
-    navigate(nextPath.startsWith("/") ? nextPath : "/players", {
+    navigate(nextPath.startsWith("/") ? nextPath : "/", {
       replace: true,
     });
   }
@@ -57,7 +57,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
+    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:py-16">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
         Member access
       </p>

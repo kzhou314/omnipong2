@@ -15,7 +15,7 @@ function normalizeUsattId(value: string) {
 export function RegisterPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const nextPath = params.get("next") ?? "/players";
+  const nextPath = params.get("next") ?? "/";
   const auth = useAuth();
   const { register, status } = auth;
 
@@ -121,7 +121,7 @@ export function RegisterPage() {
       setConfirm("");
       return;
     }
-    navigate(nextPath.startsWith("/") ? nextPath : "/players", {
+    navigate(nextPath.startsWith("/") ? nextPath : "/", {
       replace: true,
     });
   }
@@ -194,7 +194,7 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 sm:py-16">
+    <div className="mx-auto w-full max-w-2xl px-4 py-12 sm:py-16">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
         New account
       </p>
@@ -213,7 +213,7 @@ export function RegisterPage() {
 
       <form
         onSubmit={(e) => void onSubmit(e)}
-        className="mt-8 space-y-4 rounded-2xl border border-white/10 bg-panel/90 p-6 backdrop-blur-sm"
+        className="mt-8 w-full space-y-4 rounded-2xl border border-white/10 bg-panel/90 p-6 backdrop-blur-sm"
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">

@@ -3,12 +3,76 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getUserDisplayName, UserAvatar } from "@/components/UserAvatar";
 
-const linkClass = ({ isActive }: { isActive: boolean }) =>
+const desktopTabClass = ({ isActive }: { isActive: boolean }) =>
+  `inline-flex items-center gap-2 border-b-2 px-3 py-3 text-sm font-medium transition-colors ${
+    isActive
+      ? "border-accent text-white"
+      : "border-transparent text-slate-400 hover:border-white/10 hover:text-white"
+  }`;
+
+const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
   `rounded-md px-3 py-2 text-sm font-medium transition-colors ${
     isActive
       ? "bg-accent/15 text-accent"
       : "text-slate-400 hover:bg-white/5 hover:text-white"
   }`;
+
+function HomeIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m3 10 9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+      <path d="M9 20v-6h6v6" />
+    </svg>
+  );
+}
+
+function CalendarIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M8 2v4" />
+      <path d="M16 2v4" />
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M3 10h18" />
+    </svg>
+  );
+}
+
+function ShieldIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M12 3 5 6v6c0 4.6 3 8 7 9 4-1 7-4.4 7-9V6l-7-3Z" />
+      <path d="m9.5 12 1.8 1.8 3.7-3.8" />
+    </svg>
+  );
+}
 
 function ProfileIcon() {
   return (
@@ -51,7 +115,6 @@ export function Header() {
   const auth = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const isAnonymous = auth.status === "anonymous";
 
   useEffect(() => {
     if (!menuOpen) {
@@ -80,178 +143,188 @@ export function Header() {
   }, [menuOpen]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-space/75 backdrop-blur-xl">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-        <NavLink to="/" className="group flex items-center gap-3">
-          <span
-            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl bg-panel ring-1 ring-white/10"
-            aria-hidden
-          >
-            <span className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent" />
-            <span className="relative font-display text-xl leading-none text-accent">
-              OP
-            </span>
-          </span>
-          <span className="flex flex-col leading-tight">
-            <span className="font-display text-xl tracking-wide text-white group-hover:text-accent">
-              OmniPong
-            </span>
-            <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
-              Tournament ops
-            </span>
-          </span>
-        </NavLink>
-
-        <nav
-          className="hidden items-center gap-1 md:flex"
-          aria-label="Primary"
-        >
-          <NavLink to="/" className={linkClass} end>
-            Home
-          </NavLink>
-          <NavLink to="/activities" className={linkClass}>
-            Activities
-          </NavLink>
-          <NavLink to="/players" className={linkClass}>
-            For players
-          </NavLink>
-          <NavLink to="/directors" className={linkClass}>
-            For directors
-          </NavLink>
-        </nav>
-
-        <div
-          className={`flex shrink-0 items-center gap-2 ${
-            isAnonymous ? "max-w-none" : "max-w-[min(100%,14rem)]"
-          }`}
-        >
-          {auth.status === "loading" ? (
-            <span className="hidden text-xs text-slate-500 sm:inline">…</span>
-          ) : auth.status === "authenticated" ? (
-            <div className="relative" ref={menuRef}>
-              <button
-                type="button"
-                onClick={() => setMenuOpen((current) => !current)}
-                className="inline-flex rounded-full border border-white/10 bg-white/5 p-1.5 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                aria-expanded={menuOpen}
-                aria-haspopup="menu"
-                aria-label="Open account menu"
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#050914]/92 backdrop-blur-2xl">
+      <div className="border-b border-white/6">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-4 px-4 py-2.5 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <NavLink to="/" className="flex min-w-0 items-center gap-3">
+              <span
+                className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-lg bg-panel ring-1 ring-white/10"
+                aria-hidden="true"
               >
-                <UserAvatar
-                  firstName={auth.user.firstName}
-                  lastName={auth.user.lastName}
-                  email={auth.user.email}
-                  avatarUrl={auth.user.avatarUrl}
-                  className="h-10 w-10"
-                  textClassName="text-sm"
-                />
-              </button>
+                <span className="absolute inset-0 bg-gradient-to-br from-accent/20 to-transparent" />
+                <span className="relative font-display text-lg leading-none text-accent">
+                  OP
+                </span>
+              </span>
 
-              {menuOpen ? (
-                <div
-                  className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[19rem] rounded-3xl border border-white/10 bg-[#060b14]/95 p-4 shadow-[0_25px_80px_-30px_rgba(0,0,0,0.75)] backdrop-blur-xl"
-                  role="menu"
-                  aria-label="Account menu"
+              <span className="hidden min-w-0 items-center gap-3 text-sm md:flex">
+                <span className="truncate font-semibold text-white">
+                  OmniPong
+                </span>
+                <span className="text-slate-600">/</span>
+                <span className="truncate font-medium text-slate-300">
+                  Tournament Ops
+                </span>
+              </span>
+
+              <span className="flex flex-col leading-tight md:hidden">
+                <span className="font-display text-xl tracking-wide text-white">
+                  OmniPong
+                </span>
+                <span className="text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                  Tournament ops
+                </span>
+              </span>
+            </NavLink>
+          </div>
+
+          <div className="hidden min-w-0 items-center gap-2 md:flex">
+            {auth.status === "loading" ? (
+              <span className="px-3 text-xs text-slate-500">…</span>
+            ) : auth.status === "authenticated" ? (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((current) => !current)}
+                  className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 transition hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  aria-expanded={menuOpen}
+                  aria-haspopup="menu"
+                  aria-label="Open account menu"
                 >
-                  <NavLink
-                    to="/profile"
-                    onClick={() => setMenuOpen(false)}
-                    className="flex items-center gap-4 rounded-2xl px-3 py-3 transition hover:bg-white/[0.04]"
-                    role="menuitem"
+                  <UserAvatar
+                    firstName={auth.user.firstName}
+                    lastName={auth.user.lastName}
+                    email={auth.user.email}
+                    avatarUrl={auth.user.avatarUrl}
+                    className="h-9 w-9"
+                    textClassName="text-sm"
+                  />
+                </button>
+
+                {menuOpen ? (
+                  <div
+                    className="absolute right-0 top-[calc(100%+0.55rem)] z-50 w-[17rem] rounded-2xl border border-white/10 bg-[#050910]/96 p-3.5 shadow-[0_22px_70px_-30px_rgba(0,0,0,0.8)] backdrop-blur-2xl"
+                    role="menu"
+                    aria-label="Account menu"
                   >
-                    <UserAvatar
-                      firstName={auth.user.firstName}
-                      lastName={auth.user.lastName}
-                      email={auth.user.email}
-                      avatarUrl={auth.user.avatarUrl}
-                      className="h-14 w-14"
-                      textClassName="text-base"
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate text-lg font-semibold text-white">
-                        {getUserDisplayName({
-                          firstName: auth.user.firstName,
-                          lastName: auth.user.lastName,
-                          email: auth.user.email,
-                        })}
-                      </p>
-                      <p className="mt-1 truncate text-sm text-slate-400">
-                        {auth.user.email}
-                      </p>
-                    </div>
-                  </NavLink>
-
-                  <div className="my-3 border-t border-white/10" />
-
-                  <div className="space-y-1">
                     <NavLink
                       to="/profile"
                       onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-3 rounded-2xl px-3 py-3 text-slate-200 transition hover:bg-white/[0.04] hover:text-white"
+                      className="flex items-center gap-3 rounded-xl px-2.5 py-2.5 transition hover:bg-white/[0.04]"
                       role="menuitem"
                     >
-                      <ProfileIcon />
-                      <span className="text-base font-medium">Profile</span>
+                      <UserAvatar
+                        firstName={auth.user.firstName}
+                        lastName={auth.user.lastName}
+                        email={auth.user.email}
+                        avatarUrl={auth.user.avatarUrl}
+                        className="h-12 w-12"
+                        textClassName="text-sm"
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-semibold text-white">
+                          {getUserDisplayName({
+                            firstName: auth.user.firstName,
+                            lastName: auth.user.lastName,
+                            email: auth.user.email,
+                          })}
+                        </p>
+                        <p className="mt-0.5 truncate text-xs text-slate-400">
+                          {auth.user.email}
+                        </p>
+                      </div>
                     </NavLink>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setMenuOpen(false);
-                        void auth.logout();
-                      }}
-                      className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left text-slate-200 transition hover:bg-white/[0.04] hover:text-white"
-                      role="menuitem"
-                    >
-                      <SignOutIcon />
-                      <span className="text-base font-medium">Sign out</span>
-                    </button>
+                    <div className="my-2.5 border-t border-white/10" />
+
+                    <div className="space-y-1">
+                      <NavLink
+                        to="/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-slate-200 transition hover:bg-white/[0.04] hover:text-white"
+                        role="menuitem"
+                      >
+                        <ProfileIcon />
+                        <span className="text-sm font-medium">Profile</span>
+                      </NavLink>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          void auth.logout();
+                        }}
+                        className="flex w-full items-center gap-3 rounded-xl px-2.5 py-2.5 text-left text-slate-200 transition hover:bg-white/[0.04] hover:text-white"
+                        role="menuitem"
+                      >
+                        <SignOutIcon />
+                        <span className="text-sm font-medium">Sign out</span>
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : null}
-            </div>
-          ) : (
-            <>
-              <NavLink
-                to="/login"
-                className="hidden min-h-[3.2rem] min-w-[8rem] items-center justify-center rounded-2xl border border-white/15 bg-panel/80 px-5 text-base font-semibold leading-none text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition hover:border-white/25 hover:bg-white/[0.07] sm:inline-flex"
-              >
-                Sign in
-              </NavLink>
-              <NavLink
-                to="/register"
-                className="inline-flex min-h-[3.2rem] min-w-[8rem] items-center justify-center rounded-2xl border border-accent/45 bg-accent px-5 text-center text-base font-semibold leading-none text-space shadow-[0_0_24px_-8px_rgba(45,212,160,0.55)] transition hover:brightness-110"
-              >
-                Sign up
-              </NavLink>
-            </>
-          )}
+                ) : null}
+              </div>
+            ) : (
+              <>
+                <NavLink
+                  to="/login"
+                  className="inline-flex h-9 items-center rounded-lg border border-white/10 bg-white/[0.02] px-3.5 text-sm font-medium text-slate-300 transition hover:border-white/20 hover:bg-white/[0.05] hover:text-white"
+                >
+                  Sign in
+                </NavLink>
+                <NavLink
+                  to="/register"
+                  className="inline-flex h-9 items-center rounded-lg border border-accent/30 bg-accent/14 px-3.5 text-sm font-medium text-accent transition hover:bg-accent/22"
+                >
+                  Sign up
+                </NavLink>
+              </>
+            )}
+          </div>
         </div>
+      </div>
+
+      <div className="hidden border-b border-white/6 md:block">
+        <nav
+          className="mx-auto flex w-full max-w-[1600px] items-center gap-1 overflow-x-auto px-4 sm:px-6"
+          aria-label="Primary"
+        >
+          <NavLink to="/" className={desktopTabClass} end>
+            <HomeIcon />
+            Home
+          </NavLink>
+          <NavLink to="/activities" className={desktopTabClass}>
+            <CalendarIcon />
+            Activities
+          </NavLink>
+          <NavLink to="/directors" className={desktopTabClass}>
+            <ShieldIcon />
+            Director Access
+          </NavLink>
+        </nav>
       </div>
 
       <nav
         className="flex gap-1 overflow-x-auto border-t border-white/5 px-4 py-2 md:hidden"
         aria-label="Mobile primary"
       >
-        <NavLink to="/" className={linkClass} end>
+        <NavLink to="/" className={mobileLinkClass} end>
           Home
         </NavLink>
-        <NavLink to="/activities" className={linkClass}>
+        <NavLink to="/activities" className={mobileLinkClass}>
           Activities
         </NavLink>
-        <NavLink to="/players" className={linkClass}>
-          Players
-        </NavLink>
-        <NavLink to="/directors" className={linkClass}>
-          Directors
+        <NavLink to="/directors" className={mobileLinkClass}>
+          Director Access
         </NavLink>
         {auth.status === "anonymous" ? (
           <>
-            <NavLink to="/login" className={linkClass}>
+            <NavLink to="/login" className={mobileLinkClass}>
               Sign in
             </NavLink>
-            <NavLink to="/register" className={linkClass}>
-              Register
+            <NavLink to="/register" className={mobileLinkClass}>
+              Sign up
             </NavLink>
           </>
         ) : null}
