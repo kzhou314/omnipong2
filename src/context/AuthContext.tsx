@@ -12,6 +12,9 @@ type AuthUser = {
   id: string;
   email: string;
   createdAt: string;
+  firstName: string | null;
+  lastName: string | null;
+  avatarUrl: string | null;
 };
 
 type RegisterDetails = {
@@ -52,11 +55,68 @@ function toAuthUser(user: { id: string; email?: string | null; created_at: strin
     id: user.id,
     email: user.email ?? "",
     createdAt: user.created_at,
+    firstName: null,
+    lastName: null,
+    avatarUrl: null,
   };
 }
 
+type MemberSummary = {
+  first_name: string | null;
+  last_name: string | null;
+  avatar_url: string | null;
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
+
+  async function loadMemberSummary(userId: string) {
+    const preferred = await supabase
+      .from("members")
+      .select("first_name, last_name, avatar_url")
+      .eq("id", userId)
+      .maybeSingle<MemberSummary>();
+
+    if (!preferred.error) {
+      return preferred.data ?? null;
+    }
+
+    const fallback = await supabase
+      .from("members")
+      .select("first_name, last_name")
+      .eq("id", userId)
+      .maybeSingle<{ first_name: string | null; last_name: string | null }>();
+
+    if (fallback.error) {
+      return null;
+    }
+
+    if (!fallback.data) {
+      return null;
+    }
+
+    return {
+      first_name: fallback.data.first_name,
+      last_name: fallback.data.last_name,
+      avatar_url: null,
+    } satisfies MemberSummary;
+  }
+
+  async function buildAuthUser(user: {
+    id: string;
+    email?: string | null;
+    created_at: string;
+  }) {
+    const base = toAuthUser(user);
+    const summary = await loadMemberSummary(user.id);
+
+    return {
+      ...base,
+      firstName: summary?.first_name ?? null,
+      lastName: summary?.last_name ?? null,
+      avatarUrl: summary?.avatar_url ?? null,
+    } satisfies AuthUser;
+  }
 
   async function refresh() {
     const {
@@ -68,9 +128,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    const hydratedUser = await buildAuthUser(session.user);
     setState({
       status: "authenticated",
-      user: toAuthUser(session.user),
+      user: hydratedUser,
     });
   }
 
@@ -85,10 +146,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setState({
-        status: "authenticated",
-        user: toAuthUser(session.user),
-      });
+      void (async () => {
+        const hydratedUser = await buildAuthUser(session.user);
+        setState({
+          status: "authenticated",
+          user: hydratedUser,
+        });
+      })();
     });
 
     return () => {
@@ -110,9 +174,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: false as const, error: "No user returned from sign-in." };
     }
 
+    const hydratedUser = await buildAuthUser(data.user);
     setState({
       status: "authenticated",
-      user: toAuthUser(data.user),
+      user: hydratedUser,
     });
 
     return { ok: true as const };
@@ -152,9 +217,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { ok: true as const, needsEmailConfirmation: true };
     }
 
+    const hydratedUser = await buildAuthUser(data.user);
     setState({
       status: "authenticated",
-      user: toAuthUser(data.user),
+      user: hydratedUser,
     });
 
     return { ok: true as const, needsEmailConfirmation: false };

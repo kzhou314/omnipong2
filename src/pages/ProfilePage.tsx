@@ -1,11 +1,13 @@
-import { type FormEvent, useEffect, useState } from "react";
+import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/Button";
+import { UserAvatar } from "@/components/UserAvatar";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 type MemberProfile = {
   id: string;
   email: string;
+  avatar_url: string | null;
   first_name: string | null;
   last_name: string | null;
   phone: string | null;
@@ -50,6 +52,8 @@ const emptyForm: ProfileForm = {
   usattRating: "",
 };
 
+const PROFILE_AVATAR_BUCKET = "profile-avatars";
+
 function toFormState(profile: MemberProfile): ProfileForm {
   return {
     firstName: profile.first_name ?? "",
@@ -80,30 +84,59 @@ export function ProfilePage() {
   const [form, setForm] = useState<ProfileForm>(emptyForm);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  async function loadProfile(userId: string) {
-    setLoadState({ status: "loading" });
+  async function fetchMemberProfile(userId: string) {
+    const preferred = await supabase
+      .from("members")
+      .select(
+        "id, email, avatar_url, first_name, last_name, phone, club_name, city, state, usatt_id, usatt_rating, membership_status, created_at, updated_at",
+      )
+      .eq("id", userId)
+      .single<MemberProfile>();
 
-    const { data, error } = await supabase
+    if (!preferred.error && preferred.data) {
+      return preferred.data;
+    }
+
+    const fallback = await supabase
       .from("members")
       .select(
         "id, email, first_name, last_name, phone, club_name, city, state, usatt_id, usatt_rating, membership_status, created_at, updated_at",
       )
       .eq("id", userId)
-      .single<MemberProfile>();
+      .single<
+        Omit<MemberProfile, "avatar_url">
+      >();
 
-    if (error || !data) {
-      setLoadState({
-        status: "error",
-        error: error?.message ?? "Could not load your member profile.",
-      });
-      return;
+    if (fallback.error || !fallback.data) {
+      throw preferred.error ?? fallback.error ?? new Error("Could not load your member profile.");
     }
 
-    setLoadState({ status: "loaded", profile: data });
-    setForm(toFormState(data));
+    return {
+      ...fallback.data,
+      avatar_url: null,
+    } satisfies MemberProfile;
+  }
+
+  async function loadProfile(userId: string) {
+    setLoadState({ status: "loading" });
+    try {
+      const data = await fetchMemberProfile(userId);
+      setLoadState({ status: "loaded", profile: data });
+      setForm(toFormState(data));
+    } catch (error) {
+      setLoadState({
+        status: "error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Could not load your member profile.",
+      });
+    }
   }
 
   useEffect(() => {
@@ -116,29 +149,25 @@ export function ProfilePage() {
 
     async function runLoad() {
       setLoadState({ status: "loading" });
-
-      const { data, error } = await supabase
-        .from("members")
-        .select(
-          "id, email, first_name, last_name, phone, club_name, city, state, usatt_id, usatt_rating, membership_status, created_at, updated_at",
-        )
-        .eq("id", userId)
-        .single<MemberProfile>();
-
-      if (cancelled) {
-        return;
-      }
-
-      if (error || !data) {
+      try {
+        const data = await fetchMemberProfile(userId);
+        if (cancelled) {
+          return;
+        }
+        setLoadState({ status: "loaded", profile: data });
+        setForm(toFormState(data));
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
         setLoadState({
           status: "error",
-          error: error?.message ?? "Could not load your member profile.",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Could not load your member profile.",
         });
-        return;
       }
-
-      setLoadState({ status: "loaded", profile: data });
-      setForm(toFormState(data));
     }
 
     void runLoad();
@@ -148,6 +177,75 @@ export function ProfilePage() {
     };
   }, [auth]);
 
+  async function onAvatarSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file || auth.status !== "authenticated" || loadState.status !== "loaded") {
+      return;
+    }
+
+    setAvatarError(null);
+    setFormError(null);
+    setSuccessMessage(null);
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please choose an image file.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Profile images need to be 5 MB or smaller.");
+      return;
+    }
+
+    const extension = file.name.split(".").pop()?.toLowerCase() || "png";
+    const objectPath = `${auth.user.id}/avatar-${Date.now()}.${extension}`;
+
+    setUploadingAvatar(true);
+
+    const { error: uploadError } = await supabase.storage
+      .from(PROFILE_AVATAR_BUCKET)
+      .upload(objectPath, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      setUploadingAvatar(false);
+      setAvatarError(
+        uploadError.message.includes("bucket")
+          ? "Avatar upload is not configured yet. Run docs/supabase-profile-avatars.sql in Supabase first."
+          : uploadError.message,
+      );
+      return;
+    }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(PROFILE_AVATAR_BUCKET).getPublicUrl(objectPath);
+
+    const { error: updateError } = await supabase
+      .from("members")
+      .update({
+        avatar_url: `${publicUrl}?v=${Date.now()}`,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", auth.user.id);
+
+    if (updateError) {
+      setUploadingAvatar(false);
+      setAvatarError(updateError.message);
+      return;
+    }
+
+    await loadProfile(auth.user.id);
+    await auth.refresh();
+    setUploadingAvatar(false);
+    setSuccessMessage("Profile photo updated.");
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -156,6 +254,7 @@ export function ProfilePage() {
     }
 
     setFormError(null);
+    setAvatarError(null);
     setSuccessMessage(null);
     setFieldErrors({});
 
@@ -284,6 +383,42 @@ export function ProfilePage() {
             membership status stay read-only here, while the rest of your player
             profile is editable.
           </p>
+
+          <div className="mt-8 rounded-2xl border border-white/10 bg-space/40 p-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              Profile photo
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <UserAvatar
+                firstName={profile.first_name}
+                lastName={profile.last_name}
+                email={profile.email}
+                avatarUrl={profile.avatar_url}
+                className="h-20 w-20"
+                textClassName="text-xl"
+              />
+              <div className="space-y-3">
+                <label className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-space shadow-[0_0_20px_-4px_rgba(45,212,160,0.5)] transition hover:brightness-110">
+                  {uploadingAvatar ? "Uploading…" : "Choose image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => void onAvatarSelected(event)}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                </label>
+                <p className="text-xs text-slate-500">
+                  Default fallback is your initials. Upload a square image for the cleanest result.
+                </p>
+              </div>
+            </div>
+            {avatarError ? (
+              <p className="mt-3 text-sm font-medium text-red-400" role="alert">
+                {avatarError}
+              </p>
+            ) : null}
+          </div>
 
           <form onSubmit={(event) => void onSubmit(event)} className="mt-8 space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">

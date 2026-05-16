@@ -57,7 +57,7 @@ export function LoginPage() {
   }
 
   return (
-    <div className="mx-auto max-w-md px-4 py-12 sm:py-16">
+    <div className="mx-auto w-full max-w-xl px-4 py-12 sm:py-16">
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
         Member access
       </p>
@@ -76,34 +76,36 @@ export function LoginPage() {
 
       <form
         onSubmit={(e) => void onSubmit(e)}
-        className="mt-8 space-y-4 rounded-2xl border border-white/10 bg-panel/90 p-6 backdrop-blur-sm"
+        className="mt-8 w-full space-y-4 rounded-2xl border border-white/10 bg-panel/90 p-6 backdrop-blur-sm"
       >
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
-            Email
-          </label>
-          <input
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-white/10 bg-space/80 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 placeholder:text-slate-600 focus:border-accent/50 focus:ring-2"
-            placeholder="you@club.org"
-          />
-        </div>
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
-            Password
-          </label>
-          <input
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-white/10 bg-space/80 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:border-accent/50 focus:ring-2"
-          />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Email
+            </label>
+            <input
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-white/10 bg-space/80 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 placeholder:text-slate-600 focus:border-accent/50 focus:ring-2"
+              placeholder="you@club.org"
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+              Password
+            </label>
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1.5 w-full rounded-lg border border-white/10 bg-space/80 px-3 py-2.5 text-sm text-white outline-none ring-accent/40 focus:border-accent/50 focus:ring-2"
+            />
+          </div>
         </div>
         {error ? (
           <p className="text-sm font-medium text-red-400" role="alert">
