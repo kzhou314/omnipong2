@@ -217,10 +217,14 @@ export function RegisterPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-email"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Email
             </label>
             <input
+              id="register-email"
               type="email"
               autoComplete="email"
               required
@@ -232,10 +236,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-first-name"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               First name
             </label>
             <input
+              id="register-first-name"
               type="text"
               autoComplete="given-name"
               required
@@ -246,10 +254,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-last-name"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Last name
             </label>
             <input
+              id="register-last-name"
               type="text"
               autoComplete="family-name"
               required
@@ -260,10 +272,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-phone"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Phone
             </label>
             <input
+              id="register-phone"
               type="tel"
               autoComplete="tel"
               required
@@ -275,10 +291,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-club-name"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Club name
             </label>
             <input
+              id="register-club-name"
               type="text"
               required
               value={clubName}
@@ -289,10 +309,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-city"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               City
             </label>
             <input
+              id="register-city"
               type="text"
               autoComplete="address-level2"
               required
@@ -303,10 +327,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-state"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               State
             </label>
             <input
+              id="register-state"
               type="text"
               autoComplete="address-level1"
               required
@@ -318,10 +346,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-usatt-id"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               USATT ID
             </label>
             <input
+              id="register-usatt-id"
               type="text"
               required
               value={usattId}
@@ -340,10 +372,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-usatt-rating"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               USATT rating
             </label>
             <input
+              id="register-usatt-rating"
               type="number"
               inputMode="numeric"
               min="0"
@@ -357,10 +393,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-password"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Password
             </label>
             <input
+              id="register-password"
               type="password"
               autoComplete="new-password"
               required
@@ -374,10 +414,14 @@ export function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="register-confirm-password"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Confirm password
             </label>
             <input
+              id="register-confirm-password"
               type="password"
               autoComplete="new-password"
               required
