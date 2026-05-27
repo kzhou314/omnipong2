@@ -80,10 +80,14 @@ export function LoginPage() {
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="login-email"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Email
             </label>
             <input
+              id="login-email"
               type="email"
               autoComplete="email"
               required
@@ -94,10 +98,14 @@ export function LoginPage() {
             />
           </div>
           <div className="sm:col-span-2">
-            <label className="block text-xs font-medium uppercase tracking-wide text-slate-500">
+            <label
+              htmlFor="login-password"
+              className="block text-xs font-medium uppercase tracking-wide text-slate-500"
+            >
               Password
             </label>
             <input
+              id="login-password"
               type="password"
               autoComplete="current-password"
               required
