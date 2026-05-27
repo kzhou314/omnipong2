@@ -1,0 +1,58 @@
+name: Accessibility Scanner
+
+on:
+  workflow_dispatch:
+
+jobs:
+  accessibility_scanner:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build app for scanning
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: npm run build
+
+      - name: Start Vite preview
+        run: |
+          npm run preview -- --host 127.0.0.1 --port 4173 > /tmp/tt-preview.log 2>&1 &
+
+          for _ in {1..30}; do
+            if curl --silent --fail http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+
+          cat /tmp/tt-preview.log
+          exit 1
+
+      - name: Run accessibility scanner
+        uses: github/accessibility-scanner@v3
+        with:
+          urls: |
+            http://127.0.0.1:4173/
+            http://127.0.0.1:4173/players
+            http://127.0.0.1:4173/directors
+            http://127.0.0.1:4173/login
+            http://127.0.0.1:4173/register
+          repository: kzhou314/table-tennis-tournament-manager
+          token: ${{ secrets.GH_TOKEN }}
+          cache_key: cached_results-tt-tournament-manager-main.json
+          include_screenshots: true
+          open_grouped_issues: true
